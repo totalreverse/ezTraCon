@@ -1,0 +1,24 @@
+#!/bin/bash
+
+echo found
+/usr/bin/lsusb -d 3561:
+/usr/bin/lsusb -d 0fcf:
+
+firmware=${1:-ezTraCon_Classic.hex}
+
+echo Loading $firmware FIRMWARE
+#$(dirname "$0")/fxload.py "${firmware}"
+
+usbpath=$(/usr/bin/lsusb | /bin/grep -E '3561|0fcf' | /bin/sed "s#Bus[^0-9]*\([0-9]*\) Device \([0-9]*\):.*#/dev/bus/usb/\1/\2#")
+fxload -D ${usbpath} -I ${firmware}
+
+sleep 1s
+while [[ ! "$(lsusb -d 3561:| grep 3561)" && ! "$(lsusb -d 0fcf:| grep 0fcf)" ]]; do
+  echo Waiting
+  sleep 1s
+done
+
+echo result
+/usr/bin/lsusb -v -d 3561: | head -16
+/usr/bin/lsusb -v -d 0fcf: | head -16
+
